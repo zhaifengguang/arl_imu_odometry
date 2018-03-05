@@ -1,27 +1,39 @@
 #!/usr/bin/env python
 
-import math
-from math import sin, cos, pi
-import rospy
-from std_msgs.msg import Float32MultiArray  
-import rospy
 import tf
+import math
+import rospy
+from math import sin, cos, pi
+from std_msgs.msg import Float32MultiArray  
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
-rospy.init_node('odometry_publisher')
 
-odom_pub = rospy.Publisher("odom4", Odometry, queue_size=50)
+rospy.init_node('imu_publisher')
+
+odom_pub = rospy.Publisher("odom_imu", Odometry, queue_size=50)
+imu_pub = rospy.Publisher("Imu",Imu, queue_size=50)
 odom_broadcaster = tf.TransformBroadcaster()
 
 def callback(data):
-    global acc_x , acc_y , yaw_rate
-    acc_x=data.data[0]
-    acc_y=data.data[1]
-    yaw_rate=data.data[2]
+    global quat_w,quat_x,quat_y,quat_z
+    global acc_x,acc_y,acc_z
+    global roll_rate,pitch_rate,yaw_rate
+
+    quat_w=data.data[0]
+    quat_x=data.data[1]
+    quat_y=data.data[2]
+    quat_z=data.data[3]
+    acc_x =data.data[4]
+    acc_y =data.data[5]
+    acc_z =data.data[6]
+    roll_rate =data.data[7]
+    pitch_rate=data.data[8]
+    yaw_rate  =data.data[9]
 
 def listener():
-    rospy.Subscriber('IMU', Float32MultiArray , callback) 
+    rospy.Subscriber('imu_data', Float32MultiArray , callback) 
 
 x = 0.0
 y = 0.0
@@ -36,7 +48,6 @@ last_time = rospy.Time.now()
 
 r = rospy.Rate(1.0)
 while not rospy.is_shutdown():
-    global acc_x ,acc_y ,yaw_rate
     current_time = rospy.Time.now()
     listener()
     # compute odometry in a typical way given the velocities of the robot
@@ -76,8 +87,27 @@ while not rospy.is_shutdown():
     odom.child_frame_id = "base_link"
     odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
 
-    # publish the message
     odom_pub.publish(odom)
-
+    
+    #sensor_msgs/Imu
+    imu_data = Imu()
+    imu_data.header.stamp = current_time
+    imu_data.header.frame_id = "odom"
+    
+    imu_data.orientation.w = quat_w
+    imu_data.orientation.x = quat_x
+    imu_data.orientation.y = quat_y
+    imu_data.orientation.z = quat_z
+    imu_data.linear_acceleration.x = acc_x
+    imu_data.linear_acceleration.y = acc_y
+    imu_data.linear_acceleration.z = acc_z
+    imu_data.linear_acceleration_covariance[0] = -1
+    imu_data.angular_velocity.x = roll_rate
+    imu_data.angular_velocity.y = pitch_rate
+    imu_data.angular_velocity.z = yaw_rate
+    imu_data.angular_velocity_covariance[0] = -1
+    
+    imu_pub.publish(imu_data)    
+    
     last_time = current_time
     r.sleep()
