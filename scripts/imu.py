@@ -9,8 +9,11 @@ from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
+quat_w=quat_x=quat_y=quat_z=0.0
+acc_x=acc_y=acc_z=0.0
+roll_rate=pitch_rate=yaw_rate=0.0
 
-rospy.init_node('imu_publisher')
+rospy.init_node('arl_imu_odometry')
 
 odom_pub = rospy.Publisher("odom_imu", Odometry, queue_size=50)
 imu_pub = rospy.Publisher("Imu",Imu, queue_size=50)
@@ -90,24 +93,24 @@ while not rospy.is_shutdown():
     odom_pub.publish(odom)
     
     #sensor_msgs/Imu
-    imu_data = Imu()
-    imu_data.header.stamp = current_time
-    imu_data.header.frame_id = "odom"
+    imu = Imu()
+    imu.header.stamp = current_time
+    imu.header.frame_id = "odom"
     
-    imu_data.orientation.w = quat_w
-    imu_data.orientation.x = quat_x
-    imu_data.orientation.y = quat_y
-    imu_data.orientation.z = quat_z
-    imu_data.linear_acceleration.x = acc_x
-    imu_data.linear_acceleration.y = acc_y
-    imu_data.linear_acceleration.z = acc_z
-    imu_data.linear_acceleration_covariance[0] = -1
-    imu_data.angular_velocity.x = roll_rate
-    imu_data.angular_velocity.y = pitch_rate
-    imu_data.angular_velocity.z = yaw_rate
-    imu_data.angular_velocity_covariance[0] = -1
+    imu.orientation.w = quat_w
+    imu.orientation.x = quat_x
+    imu.orientation.y = quat_y
+    imu.orientation.z = quat_z
+    imu.linear_acceleration.x = acc_x
+    imu.linear_acceleration.y = acc_y
+    imu.linear_acceleration.z = acc_z
+    imu.linear_acceleration_covariance[0] = -1
+    imu.angular_velocity.x = roll_rate
+    imu.angular_velocity.y = pitch_rate
+    imu.angular_velocity.z = yaw_rate
+    imu.angular_velocity_covariance[0] = -1
     
-    imu_pub.publish(imu_data)    
+    imu_pub.publish(imu)    
     
     last_time = current_time
     r.sleep()
