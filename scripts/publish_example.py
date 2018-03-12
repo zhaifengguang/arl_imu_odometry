@@ -23,7 +23,7 @@ def talker():
            
 	pub=rospy.Publisher('imu_data',Float32MultiArray,queue_size = 10)
 	rospy.init_node('publish_example')
-	r=rospy.Rate(1)
+	r=rospy.Rate(5.0)
 	mat=Float32MultiArray()
 	mat.data=[0]*11
 

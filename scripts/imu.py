@@ -54,7 +54,7 @@ def callback(data):
     yaw       = data.data[10]
 
 
-r = rospy.Rate(1.0) 
+r = rospy.Rate(5.0) 
 #listener()
 #current_yaw = previous_yaw = yaw
 
@@ -65,7 +65,7 @@ while not rospy.is_shutdown():
                            # nav_msgs.msg/odom #
     ###################################################################
     
-    dt      = 1.0 #(current_time - last_time).to_sec()
+    dt      = 0.2 #(current_time - last_time).to_sec()
     rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
     acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
     acc_mat = rot_mat*acc_mat	 
@@ -103,6 +103,9 @@ while not rospy.is_shutdown():
                            ###################
                            # sensor_msgs/Imu #
     ###################################################################
+    imu = Imu()
+    imu.header.stamp = current_time
+    imu.header.frame_id = "odom"    
     
     imu.orientation.w = quat_w
     imu.orientation.x = quat_x
@@ -116,11 +119,6 @@ while not rospy.is_shutdown():
     imu.angular_velocity.y = pitch_rate
     imu.angular_velocity.z = yaw_rate
     imu.angular_velocity_covariance[0] = -1
-
-    imu = Imu()
-    imu.header.stamp = current_time
-    imu.header.frame_id = "odom"    
-    imu.child_frame_id = "base_link"
     imu_pub.publish(imu)    
     ###################################################################
     
