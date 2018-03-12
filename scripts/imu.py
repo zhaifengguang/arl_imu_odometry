@@ -65,7 +65,7 @@ while not rospy.is_shutdown():
                            # nav_msgs.msg/odom #
     ###################################################################
     
-    dt      = 0.2 #(current_time - last_time).to_sec()
+    dt      = 0.2 
     rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
     acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
     acc_mat = rot_mat*acc_mat	 
@@ -73,7 +73,7 @@ while not rospy.is_shutdown():
     acc_y   = float(acc_mat[1][0])
     vx      = vx + (acc_x*dt) 
     vy      = vy + (acc_y*dt) 
-    vth     = yaw_rate #(current_yaw-previous_yaw)/dt    
+    vth     = yaw_rate    #(current_yaw-previous_yaw)/dt    
     delta_x = (vx * cos(th) - vy * sin(th)) * dt
     delta_y = (vx * sin(th) + vy * cos(th)) * dt
     delta_th= yaw_rate*dt #current_yaw-previous_yaw
@@ -121,6 +121,4 @@ while not rospy.is_shutdown():
     imu.angular_velocity_covariance[0] = -1
     imu_pub.publish(imu)    
     ###################################################################
-    
-    last_time = current_time
     r.sleep()
