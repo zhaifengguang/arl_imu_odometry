@@ -1,116 +1,128 @@
 #!/usr/bin/env python
 
 import tf
-import math
 import rospy
-from math import sin, cos, pi
-from std_msgs.msg import Float32MultiArray  
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Imu
-from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
-
-quat_w=quat_x=quat_y=quat_z=0.0
-acc_x=acc_y=acc_z=0.0
-roll_rate=pitch_rate=yaw_rate=0.0
+import numpy             as     np
+import matplotlib.pyplot as     plt
+from   sensor_msgs.msg   import Imu
+from   nav_msgs.msg      import Odometry
+from   math              import sin, cos, pi
+from   std_msgs.msg      import Float32MultiArray
+from   geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
 rospy.init_node('arl_imu_odometry')
-
-odom_pub = rospy.Publisher("odom_imu", Odometry, queue_size=50)
-imu_pub = rospy.Publisher("Imu",Imu, queue_size=50)
+odom_pub         = rospy.Publisher("odom_imu", Odometry, queue_size=50)
+imu_pub          = rospy.Publisher("Imu",Imu, queue_size=50)
 odom_broadcaster = tf.TransformBroadcaster()
+
+x          = 0.0
+y          = 0.0
+th         = 0.0
+vx         = 0.0
+vy         = 0.0
+vth        = 0.0
+quat_w     = 0.0
+quat_x     = 0.0
+quat_y     = 0.0
+quat_z     = 0.0
+acc_x_raw  = 0.0
+acc_y_raw  = 0.0
+acc_z_raw  = 0.0
+roll_rate  = 0.0
+pitch_rate = 0.0
+yaw_rate   = 0.0
+
+
+def listener():
+    rospy.Subscriber('imu_data', Float32MultiArray , callback)
 
 def callback(data):
     global quat_w,quat_x,quat_y,quat_z
-    global acc_x,acc_y,acc_z
+    global acc_x_raw,acc_y_raw,acc_z_raw
     global roll_rate,pitch_rate,yaw_rate
 
-    quat_w=data.data[0]
-    quat_x=data.data[1]
-    quat_y=data.data[2]
-    quat_z=data.data[3]
-    acc_x =data.data[4]
-    acc_y =data.data[5]
-    acc_z =data.data[6]
-    roll_rate =data.data[7]
-    pitch_rate=data.data[8]
-    yaw_rate  =data.data[9]
+    quat_w    = data.data[0]
+    quat_x    = data.data[1]
+    quat_y    = data.data[2]
+    quat_z    = data.data[3]
+    acc_x_raw = data.data[4]
+    acc_y_raw = data.data[5]
+    acc_z_raw = data.data[6]
+    roll_rate = data.data[7]
+    pitch_rate= data.data[8]
+    yaw_rate  = data.data[9]
+    yaw       = data.data[10]
 
-def listener():
-    rospy.Subscriber('imu_data', Float32MultiArray , callback) 
 
-x = 0.0
-y = 0.0
-th = 0.0
+r = rospy.Rate(1.0) 
+#listener()
+#current_yaw = previous_yaw = yaw
 
-vx = 0.0
-vy = 0.0
-vth = 0.0
-
-current_time = rospy.Time.now()
-last_time = rospy.Time.now()
-
-r = rospy.Rate(1.0)
 while not rospy.is_shutdown():
     current_time = rospy.Time.now()
     listener()
-    # compute odometry in a typical way given the velocities of the robot
-    dt = (current_time - last_time).to_sec()
-    vx = vx + (acc_x*dt) # acc_x from imu
-    vy = vy + (acc_y*dt) # acc_y from imu
-    vth = yaw_rate         # yaw_rate from imu
+                           #####################
+                           # nav_msgs.msg/odom #
+    ###################################################################
+    
+    dt      = 1.0 #(current_time - last_time).to_sec()
+    rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
+    acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
+    acc_mat = rot_mat*acc_mat	 
+    acc_x   = float(acc_mat[0][0])
+    acc_y   = float(acc_mat[1][0])
+    vx      = vx + (acc_x*dt) 
+    vy      = vy + (acc_y*dt) 
+    vth     = yaw_rate #(current_yaw-previous_yaw)/dt    
     delta_x = (vx * cos(th) - vy * sin(th)) * dt
     delta_y = (vx * sin(th) + vy * cos(th)) * dt
-    delta_th = vth * dt
-
-    x += delta_x
-    y += delta_y
-    th += delta_th
-
-    # since all odometry is 6DOF we'll need a quaternion created from yaw
+    delta_th= yaw_rate*dt #current_yaw-previous_yaw
+    x      += delta_x
+    y      += delta_y
+    th     += delta_th
+     
     odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
-
-    # first, we'll publish the transform over tf
     odom_broadcaster.sendTransform(
         (x, y, 0.),
         odom_quat,
         current_time,
         "base_link",
         "odom"
-    )
+        )
 
-    # next, we'll publish the odometry message over ROS
     odom = Odometry()
     odom.header.stamp = current_time
     odom.header.frame_id = "odom"
-
-    # set the position
     odom.pose.pose = Pose(Point(x, y, 0.), Quaternion(*odom_quat))
-
-    # set the velocity
     odom.child_frame_id = "base_link"
     odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
-
     odom_pub.publish(odom)
+    ###################################################################
     
-    #sensor_msgs/Imu
-    imu = Imu()
-    imu.header.stamp = current_time
-    imu.header.frame_id = "odom"
+        
+                           ###################
+                           # sensor_msgs/Imu #
+    ###################################################################
     
     imu.orientation.w = quat_w
     imu.orientation.x = quat_x
     imu.orientation.y = quat_y
     imu.orientation.z = quat_z
-    imu.linear_acceleration.x = acc_x
-    imu.linear_acceleration.y = acc_y
-    imu.linear_acceleration.z = acc_z
+    imu.linear_acceleration.x = acc_x_raw
+    imu.linear_acceleration.y = acc_y_raw
+    imu.linear_acceleration.z = acc_z_raw
     imu.linear_acceleration_covariance[0] = -1
     imu.angular_velocity.x = roll_rate
     imu.angular_velocity.y = pitch_rate
     imu.angular_velocity.z = yaw_rate
     imu.angular_velocity_covariance[0] = -1
-    
+
+    imu = Imu()
+    imu.header.stamp = current_time
+    imu.header.frame_id = "odom"    
+    imu.child_frame_id = "base_link"
     imu_pub.publish(imu)    
+    ###################################################################
     
     last_time = current_time
     r.sleep()
