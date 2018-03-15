@@ -25,6 +25,7 @@ quat_w     = 0.0
 quat_x     = 0.0
 quat_y     = 0.0
 quat_z     = 0.0
+yaw        = 0.0
 acc_x_raw  = 0.0
 acc_y_raw  = 0.0
 acc_z_raw  = 0.0
@@ -40,6 +41,7 @@ def callback(data):
     global quat_w,quat_x,quat_y,quat_z
     global acc_x_raw,acc_y_raw,acc_z_raw
     global roll_rate,pitch_rate,yaw_rate
+    global yaw
 
     quat_w    = data.data[0]
     quat_x    = data.data[1]
@@ -55,32 +57,32 @@ def callback(data):
 
 
 r = rospy.Rate(5.0) 
-#listener()
-#current_yaw = previous_yaw = yaw
+listener()
+current_yaw = previous_yaw = yaw
 
 while not rospy.is_shutdown():
     current_time = rospy.Time.now()
     listener()
+    current_yaw  = yaw
                            #####################
                            # nav_msgs.msg/odom #
-    ###################################################################
-    
+    ###################################################################  
     dt      = 0.2 
+    delta_th= current_yaw-previous_yaw
+    th     += delta_th
     rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
     acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
     acc_mat = rot_mat*acc_mat	 
     acc_x   = float(acc_mat[0][0])
     acc_y   = float(acc_mat[1][0])
     vx      = vx + (acc_x*dt) 
-    vy      = vy + (acc_y*dt) 
-    vth     = yaw_rate    #(current_yaw-previous_yaw)/dt    
+    vy      = vy + (acc_y*dt)
+    vth     = yaw_rate    
     delta_x = (vx * cos(th) - vy * sin(th)) * dt
     delta_y = (vx * sin(th) + vy * cos(th)) * dt
-    delta_th= yaw_rate*dt #current_yaw-previous_yaw
     x      += delta_x
     y      += delta_y
-    th     += delta_th
-     
+    
     odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
     odom_broadcaster.sendTransform(
         (x, y, 0.),
@@ -91,11 +93,11 @@ while not rospy.is_shutdown():
         )
 
     odom = Odometry()
-    odom.header.stamp = current_time
+    odom.header.stamp    = current_time
     odom.header.frame_id = "odom"
-    odom.pose.pose = Pose(Point(x, y, 0.), Quaternion(*odom_quat))
-    odom.child_frame_id = "base_link"
-    odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
+    odom.pose.pose       = Pose(Point(x, y, 0.), Quaternion(*odom_quat))
+    odom.child_frame_id  = "base_link"
+    odom.twist.twist     = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
     odom_pub.publish(odom)
     ###################################################################
     
@@ -104,9 +106,8 @@ while not rospy.is_shutdown():
                            # sensor_msgs/Imu #
     ###################################################################
     imu = Imu()
-    imu.header.stamp = current_time
+    imu.header.stamp    = current_time
     imu.header.frame_id = "odom"    
-    
     imu.orientation.w = quat_w
     imu.orientation.x = quat_x
     imu.orientation.y = quat_y
@@ -121,4 +122,5 @@ while not rospy.is_shutdown():
     imu.angular_velocity_covariance[0] = -1
     imu_pub.publish(imu)    
     ###################################################################
+    previous_yaw = current_yaw
     r.sleep()

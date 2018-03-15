@@ -4,23 +4,24 @@ import rospy
 import roslib
 from std_msgs.msg import Float32MultiArray
 
-c=0
+c=0.0
+i=0.0
 #get variables from your imu code
 #just initializing some values
-quat_w=1
+quat_w=1.0
 quat_x=quat_y=quat_z=0.0
-acc_x=acc_y=0.2
-acc_z=0
-roll_rate=pitch_rate=0
-yaw_rate=0.1
-yaw = 10
+acc_x=0.2
+acc_y=0.0
+acc_z=0.0
+roll_rate=pitch_rate=0.0
+yaw_rate=0.0
+yaw = 10.0
 
 def talker():
-        global quat_w,quat_x,quat_y,quat_z,yaw
-        global acc_x,acc_y,acc_z
-        global roll_rate,pitch_rate,yaw_rate
-  
-           
+	global quat_w,quat_x,quat_y,quat_z,yaw
+	global acc_x,acc_y,acc_z
+	global roll_rate,pitch_rate,yaw_rate
+      
 	pub=rospy.Publisher('imu_data',Float32MultiArray,queue_size = 10)
 	rospy.init_node('publish_example')
 	r=rospy.Rate(5.0)
@@ -28,13 +29,25 @@ def talker():
 	mat.data=[0]*11
 
 	while not rospy.is_shutdown():
-                global c
-                if c==2:
-                       acc_x=0
-		       acc_y=0
+		global c,i
+		if c==2:
+			acc_x=0
+                        yaw_rate=0.1
+                        i=0
+                if i == (20) and c >= 2 :
+        		yaw_rate=yaw_rate*-1
+                if i == (60) and c >=2 :
+                        yaw_rate= yaw_rate*-1   
+                if i == (80) and c >= 2:
+                        yaw_rate=0
+                        
+                
+                i=i+1
 		mat.data = [quat_w,quat_x,quat_y,quat_z,acc_x,acc_y,acc_z,roll_rate,pitch_rate,yaw_rate,yaw]
 		pub.publish(mat)
-                c=c+1
+		c=c+1
+		
+		print i
 		r.sleep()
 if __name__ == '__main__':
 	talker()		
