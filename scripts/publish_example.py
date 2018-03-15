@@ -32,22 +32,8 @@ def talker():
 		global c,i
 		if c==2:
 			acc_x=0
-                        yaw_rate=0.1
-                        i=0
-                if i == (20) and c >= 2 :
-        		yaw_rate=yaw_rate*-1
-                if i == (60) and c >=2 :
-                        yaw_rate= yaw_rate*-1   
-                if i == (80) and c >= 2:
-                        yaw_rate=0
-                        
-                
-                i=i+1
 		mat.data = [quat_w,quat_x,quat_y,quat_z,acc_x,acc_y,acc_z,roll_rate,pitch_rate,yaw_rate,yaw]
 		pub.publish(mat)
-		c=c+1
-		
-		print i
 		r.sleep()
 if __name__ == '__main__':
 	talker()		
