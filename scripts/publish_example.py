@@ -2,20 +2,22 @@
 
 import rospy
 import roslib
-from std_msgs.msg import Float32MultiArray
+from   std_msgs.msg import Float32MultiArray
 
-c=0.0
-i=0.0
 #get variables from your imu code
 #just initializing some values
-quat_w=1.0
-quat_x=quat_y=quat_z=0.0
-acc_x=0.2
-acc_y=0.0
-acc_z=0.0
-roll_rate=pitch_rate=0.0
-yaw_rate=0.0
-yaw = 10.0
+quat_w    = 1.0
+quat_x    = 0.0
+quat_y    = 0.0 
+quat_z    = 0.0
+acc_x     = 0.2
+acc_y     = 0.0
+acc_z     = 0.0
+roll_rate = 0.0
+pitch_rate= 0.0
+yaw_rate  = 0.0
+yaw       = 10.0
+c         = 0.0
 
 def talker():
 	global quat_w,quat_x,quat_y,quat_z,yaw
@@ -34,6 +36,7 @@ def talker():
 			acc_x=0
 		mat.data = [quat_w,quat_x,quat_y,quat_z,acc_x,acc_y,acc_z,roll_rate,pitch_rate,yaw_rate,yaw]
 		pub.publish(mat)
+		c=c+1
 		r.sleep()
 if __name__ == '__main__':
 	talker()		
