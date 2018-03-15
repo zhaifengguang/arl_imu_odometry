@@ -16,7 +16,7 @@ acc_z     = 0.0
 roll_rate = 0.0
 pitch_rate= 0.0
 yaw_rate  = 0.0
-yaw       = 10.0
+yaw       = 77
 c         = 0.0
 
 def talker():
@@ -34,8 +34,10 @@ def talker():
 		global c,i
 		if c==2:
 			acc_x=0
+		
 		mat.data = [quat_w,quat_x,quat_y,quat_z,acc_x,acc_y,acc_z,roll_rate,pitch_rate,yaw_rate,yaw]
 		pub.publish(mat)
+		yaw = yaw + 1
 		c=c+1
 		r.sleep()
 if __name__ == '__main__':

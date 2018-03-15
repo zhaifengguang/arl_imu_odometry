@@ -6,7 +6,7 @@ import numpy             as     np
 import matplotlib.pyplot as     plt
 from   sensor_msgs.msg   import Imu
 from   nav_msgs.msg      import Odometry
-from   math              import sin, cos, pi
+from   math              import sin, cos, pi , radians , degrees
 from   std_msgs.msg      import Float32MultiArray
 from   geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
@@ -15,6 +15,7 @@ odom_pub         = rospy.Publisher("odom_imu", Odometry, queue_size=50)
 imu_pub          = rospy.Publisher("Imu",Imu, queue_size=50)
 odom_broadcaster = tf.TransformBroadcaster()
 
+s          = 0.0
 x          = 0.0
 y          = 0.0
 th         = 0.0
@@ -26,6 +27,7 @@ quat_x     = 0.0
 quat_y     = 0.0
 quat_z     = 0.0
 yaw        = 0.0
+init_yaw   = 0.0
 acc_x_raw  = 0.0
 acc_y_raw  = 0.0
 acc_z_raw  = 0.0
@@ -41,7 +43,7 @@ def callback(data):
     global quat_w,quat_x,quat_y,quat_z
     global acc_x_raw,acc_y_raw,acc_z_raw
     global roll_rate,pitch_rate,yaw_rate
-    global yaw
+    global init_yaw , yaw , s
 
     quat_w    = data.data[0]
     quat_x    = data.data[1]
@@ -55,21 +57,22 @@ def callback(data):
     yaw_rate  = data.data[9]
     yaw       = data.data[10]
 
+    if s == 0 :
+        init_yaw = yaw
+        s = 1
+        print "initialized yaw as : ",init_yaw
 
 r = rospy.Rate(5.0) 
-listener()
-current_yaw = previous_yaw = yaw
 
 while not rospy.is_shutdown():
     current_time = rospy.Time.now()
     listener()
-    current_yaw  = yaw
                            #####################
                            # nav_msgs.msg/odom #
     ###################################################################  
     dt      = 0.2 
-    delta_th= current_yaw-previous_yaw
-    th     += delta_th
+    th      = init_yaw-yaw
+    th      = radians(th)
     rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
     acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
     acc_mat = rot_mat*acc_mat	 
@@ -122,5 +125,4 @@ while not rospy.is_shutdown():
     imu.angular_velocity_covariance[0] = -1
     imu_pub.publish(imu)    
     ###################################################################
-    previous_yaw = current_yaw
     r.sleep()
