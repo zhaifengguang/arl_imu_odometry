@@ -109,7 +109,7 @@ while not rospy.is_shutdown():
         "odom"
         )
     
-    if acc_x_raw != 0 :
+    if acc_x_raw != 0.0 :
 	    Pv_new = (Fv*Pv_old*Fv.T) + (Fu*Q*Fu.T)
     
     P_new  = (Fx*P_old*Fx.T)  + (Fv*Pv_new*Fu.T)
@@ -136,27 +136,5 @@ while not rospy.is_shutdown():
     
     Pv_old = Pv_new
     P_old  = P_new 
-    ###################################################################
-    
-        
-                           ###################
-                           # sensor_msgs/Imu #
-    ###################################################################
-    imu = Imu()
-    imu.header.stamp    = current_time
-    imu.header.frame_id = "odom"    
-    imu.orientation.w = quat_w
-    imu.orientation.x = quat_x
-    imu.orientation.y = quat_y
-    imu.orientation.z = quat_z
-    imu.linear_acceleration.x = acc_x_raw
-    imu.linear_acceleration.y = acc_y_raw
-    imu.linear_acceleration.z = acc_z_raw
-    imu.linear_acceleration_covariance[0] = -1
-    imu.angular_velocity.x = roll_rate
-    imu.angular_velocity.y = pitch_rate
-    imu.angular_velocity.z = yaw_rate
-    imu.angular_velocity_covariance[0] = -1
-    imu_pub.publish(imu)    
     ###################################################################
     r.sleep()
