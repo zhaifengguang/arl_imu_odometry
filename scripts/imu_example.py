@@ -32,7 +32,7 @@ def talker():
 
 	while not rospy.is_shutdown():
 		global c,i
-		if c==2:
+		if c==10:
 			acc_x=0
 		
 		mat.data = [quat_w,quat_x,quat_y,quat_z,acc_x,acc_y,acc_z,roll_rate,pitch_rate,yaw_rate,yaw]

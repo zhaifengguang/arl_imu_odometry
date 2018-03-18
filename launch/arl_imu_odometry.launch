@@ -1,0 +1,9 @@
+<launch>
+
+  <node pkg="arl_imu_odometry" name="arl_imu_odometry" type="imu.py"/> 
+
+  <node pkg="arl_imu_odometry" name="Path_Plot" type="rqt.py"/>
+
+  <node pkg="arl_imu_odometry" name="Imu_Example" type="imu_example.py"/>
+
+</launch>
