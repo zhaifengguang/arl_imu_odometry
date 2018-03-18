@@ -18,7 +18,7 @@ odom_broadcaster = tf.TransformBroadcaster()
 s          = 0.0
 x          = 0.0
 y          = 0.0
-dt		   = 0.2
+dt	   = 0.2
 th         = 0.0
 vx_raw     = 0.0
 vy_raw     = 0.0
@@ -40,8 +40,8 @@ P_old      = np.matrix(([0,0],[0,0]))
 Pv_new     = np.matrix(([0,0],[0,0]))
 Pv_old	   = np.matrix(([0,0],[0,0]))
 Fx         = np.matrix(([1,0],[0,1]))
-Fv 		   = np.matrix(([1,0],[0,1]))
-Fu 		   = np.matrix(([dt,0],[0,dt]))
+Fv 	   = np.matrix(([1,0],[0,1]))
+Fu 	   = np.matrix(([dt,0],[0,dt]))
 Q          = np.matrix(([(0.019*0.019),0],[0,(0.019*0.019)]))
 Pose_cov   = np.array([0.0]*36)
 Twist_cov  = np.array([0.0]*36)
@@ -85,8 +85,7 @@ while not rospy.is_shutdown():
     th      = radians(th)
     
     rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
-    #acc_mat = np.matrix(([acc_x_raw],[acc_y_raw]))
-    	 
+        	 
     vx_raw  = vx_raw + (acc_x_raw*dt) 
     vy_raw  = vy_raw + (acc_y_raw*dt)
     
