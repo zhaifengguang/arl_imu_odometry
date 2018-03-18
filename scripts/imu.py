@@ -84,8 +84,8 @@ while not rospy.is_shutdown():
     th      = init_yaw-yaw
     th      = radians(th)
     
-    rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))   
- 	 
+    rot_mat = np.matrix(([cos(th),-1*sin(th)],[sin(th),cos(th)]))
+        	 
     vx_raw  = vx_raw + (acc_x_raw*dt) 
     vy_raw  = vy_raw + (acc_y_raw*dt)
     
@@ -108,7 +108,7 @@ while not rospy.is_shutdown():
         "odom"
         )
     
-    if acc_x_raw != 0 :
+    if acc_x_raw != 0.0 :
 	    Pv_new = (Fv*Pv_old*Fv.T) + (Fu*Q*Fu.T)
     
     P_new  = (Fx*P_old*Fx.T)  + (Fv*Pv_new*Fu.T)
@@ -135,5 +135,5 @@ while not rospy.is_shutdown():
     
     Pv_old = Pv_new
     P_old  = P_new 
-    ###################################################################        
+	###################################################################   
     r.sleep()

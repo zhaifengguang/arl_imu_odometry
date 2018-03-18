@@ -2,8 +2,8 @@
 
   <node pkg="arl_imu_odometry" name="arl_imu_odometry" type="imu.py"/> 
 
-  <node pkg="arl_imu_odometry" name="Response_Graph" type="rqt.py"/>
-
   <node pkg="arl_imu_odometry" name="Car_Example" type="imu_example.py"/>
+
+  <node pkg="arl_imu_odometry" name="Path_Plot" type="rqt.py"/>
 
 </launch>
